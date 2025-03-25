@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tap Screen</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #e0e5ec; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; font-size: 16px; }
+    /* Increased container padding from 1rem to 1.5rem */
+    .container { width: 95vw; max-width: 420px; padding: 1.5rem; border-radius: 30px; background: #e0e5ec; box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff; position: relative; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .mmk-balance { background: #e0e5ec; padding: 0.6rem 1rem; border-radius: 15px; box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff; font-size: 1rem; color: #2d4263; display: flex; align-items: center; gap: 0.5rem; }
+    .mmk-balance i { font-size: 1.2rem; }
+    .telegram-link { width: 35px; height: 35px; border-radius: 50%; background: #e0e5ec; box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; border: 2px solid #2d4263; }
+    .telegram-link:hover { box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff; }
+    .telegram-link i { font-size: 1.3rem; color: #2d4263; }
+    .withdraw-btn { padding: 0.6rem 1rem; border: none; border-radius: 15px; background: #e0e5ec; box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #2d4263; border: 2px solid #2d4263; min-width: 120px; min-height: 40px; }
+    .withdraw-btn:hover { box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff; }
+    .withdraw-btn i { font-size: 1.2rem; }
+    .withdraw-form, .withdraw-details, .referral-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #e0e5ec; padding: 1rem; border-radius: 20px; border: 2px solid #2d4263; width: 90vw; max-width: 320px; z-index: 10; color: #2d4263; font-size: 1rem; }
+    .withdraw-form h3, .withdraw-details h3, .referral-modal h3 { margin-bottom: 1rem; text-align: center; font-size: 1.2rem; }
+    .withdraw-form .input-container { position: relative; margin-bottom: 0.6rem; }
+    .withdraw-form input, .withdraw-form textarea, .withdraw-form select, .referral-modal input { width: 100%; padding: 0.6rem; border: none; border-radius: 10px; background: #e0e5ec; box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff; color: #2d4263; font-size: 0.9rem; min-height: 40px; }
+    .withdraw-form select { margin-bottom: 0.6rem; }
+    .withdraw-form button, .referral-modal button { width: 100%; padding: 0.6rem; border: none; border-radius: 15px; background: #e0e5ec; box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff; cursor: pointer; transition: all 0.2s; color: #2d4263; font-size: 0.9rem; border: 2px solid #2d4263; min-height: 40px; }
+    .withdraw-form button:hover, .referral-modal button:hover { box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff; }
+    .withdraw-details p { margin: 0.3rem 0; font-size: 0.85rem; }
+    .telegram-links { display: flex; justify-content: center; gap: 1rem; margin-top: 0.6rem; }
+    
+    /* Content Placeholder with Weather */
+    .content-placeholder {
+      position: relative;
+      width: 100%;
+      height: 75vh;
+      max-height: 600px;
+      overflow: hidden;
+      background: #2d4263;
+      border-radius: 20px;
+      box-shadow: 
+        inset 8px 8px 16px #1e2e4a,
+        inset -8px -8px 16px #3c567c,
+        0 0 10px rgba(0, 0, 0, 0.5);
+      background: radial-gradient(ellipse at center, #4a6a8a 0%, #2d4263 70%);
+      background: 
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent 50%),
+        radial-gradient(ellipse at center, #4a6a8a 0%, #2d4263 70%);
+      /* Added margin-bottom to separate from activity feed */
+      margin-bottom: 1.5rem;
+    }
+    .content-placeholder::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at top center, rgba(255, 255, 255, 0.4) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .content-placeholder::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 22px;
+      pointer-events: none;
+    }
+
+    /* Weather Animation Styles */
+    .weather-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+    }
+
+    .weather-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      animation: seasonChange 18s infinite linear;
+    }
+
+    @keyframes seasonChange {
+      0%, 100% { background: #87CEEB; }
+      33% { background: #4682B4; }
+      66% { background: #B0C4DE; }
+    }
+
+    .sun {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: #FFD700;
+      border-radius: 50%;
+      top: 20%;
+      left: 20%;
+      animation: sunMove 18s infinite linear;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
+
+    @keyframes sunMove {
+      0% { transform: translate(0, 0); opacity: 1; }
+      33% { transform: translate(50px, 20px); opacity: 0.3; }
+      66% { transform: translate(100px, 40px); opacity: 0.1; }
+      100% { transform: translate(0, 0); opacity: 1; }
+    }
+
+    .cloud {
+      position: absolute;
+      width: 100px;
+      height: 40px;
+      background: white;
+      border-radius: 20px;
+      opacity: 0.8;
+      animation: cloudMove 18s infinite linear;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .cloud::before {
+      width: 40px;
+      height: 40px;
+      top: -20px;
+      left: 20px;
+    }
+
+    .cloud::after {
+      width: 60px;
+      height: 60px;
+      top: -30px;
+      left: 50px;
+    }
+
+    @keyframes cloudMove {
+      0% { transform: translateX(-150px); opacity: 0.8; }
+      33% { transform: translateX(50px); opacity: 1; }
+      66% { transform: translateX(150px); opacity: 0.5; }
+      100% { transform: translateX(-150px); opacity: 0.8; }
+    }
+
+    .rain {
+      position: absolute;
+      width: 2px;
+      height: 20px;
+      background: #87CEFA;
+      animation: rainFall 0.5s infinite linear;
+    }
+
+    @keyframes rainFall {
+      0% { transform: translateY(-20px); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+
+    .snow {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: white;
+      border-radius: 50%;
+      animation: snowFall 2s infinite linear;
+    }
+
+    @keyframes snowFall {
+      0% { transform: translateY(-20px); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    .ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 30%;
+      animation: groundChange 18s infinite linear;
+    }
+
+    @keyframes groundChange {
+      0%, 100% { background: #98FB98; }
+      33% { background: #556B2F; }
+      66% { background: #F0F8FF; }
+    }
+
+    .activity-feed { background: #e0e5ec; padding: 0.75rem; border-radius: 15px; box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff; height: 15vh; max-height: 120px; overflow-y: auto; margin-bottom: 1rem; }
+    .activity-item { padding: 0.4rem 0.5rem; margin: 0.25rem 0; background: rgba(255, 255, 255, 0.3); border-radius: 8px; font-size: 0.75rem; color: #2d4263; display: flex; align-items: center; gap: 0.5rem; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .referral-feature { width: calc(100% - 45px); padding: 0.75rem; border-radius: 15px; background: #e0e5ec; box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.9rem; color: #2d4263; border: 2px solid #2d4263; cursor: pointer; }
+    .referral-container { display: flex; align-items: center; gap: 0.6rem; }
+    .referral-feature i { font-size: 1.3rem; }
+    .neon-warning-container { position: relative; margin-top: 0.6rem; }
+    .neon-warning { padding: 0.3rem; border-radius: 5px; border: 2px solid #d32f2f; color: #d32f2f; text-align: center; animation: neonBlink 1.5s infinite; white-space: nowrap; font-size: 0.8rem; }
+    @keyframes neonBlink { 0%, 100% { box-shadow: 0 0 2px #d32f2f, 0 0 4px #d32f2f; } 50% { box-shadow: none; } }
+    .error { color: #d32f2f; font-size: 0.85rem; margin-top: 0.3rem; display: block; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 5; }
+    .countdown-circle { position: absolute; top: -40px; right: 10px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid #d32f2f; background: #e0e5ec; color: #d32f2f; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; animation: ledBlink 0.5s infinite; }
+    @keyframes ledBlink { 0%, 100% { box-shadow: 0 0 5px #d32f2f, 0 0 10px #d32f2f; } 50% { box-shadow: none; } }
+
+    @media (max-width: 320px) {
+      .container { width: 98vw; padding: 0.5rem; }
+      .content-placeholder { height: 60vh; max-height: 375px; margin-bottom: 1rem; }
+      .withdraw-form, .withdraw-details, .referral-modal { width: 95vw; padding: 0.6rem; }
+      .withdraw-btn, .referral-feature { font-size: 0.8rem; padding: 0.5rem; }
+      .countdown-circle { top: -45px; right: 5px; width: 30px; height: 30px; font-size: 0.8rem; }
+    }
+    @media (min-width: 321px) and (max-width: 480px) {
+      .content-placeholder { height: 67.5vh; max-height: 420px; margin-bottom: 1.2rem; }
+      .mmk-balance, .withdraw-btn { font-size: 0.9rem; }
+      .activity-feed { height: 12vh; max-height: 100px; }
+      .countdown-circle { top: -40px; }
+    }
+    @media (min-width: 481px) and (max-width: 768px) {
+      .container { max-width: 500px; }
+      .content-placeholder { height: 75vh; max-height: 525px; margin-bottom: 1.5rem; }
+      .countdown-circle { top: -40px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay"></div>
+  <div class="container" id="mainContainer">
+    <div class="top-bar">
+      <div class="mmk-balance"><i class="fa-solid fa-wallet"></i><span id="mmkBalance">0 MMK</span></div>
+      <button class="withdraw-btn" onclick="showWithdrawForm()" aria-label="Withdraw Funds"><i class="fa-solid fa-money-bill-transfer"></i><span>Withdraw</span></button>
+    </div>
+    <div class="content-placeholder">
+      <div class="weather-container">
+        <div class="weather-bg">
+          <div class="sun"></div>
+          <div class="cloud" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
+          <div class="cloud" style="top: 25%; left: 40%; animation-delay: -3s;"></div>
+          <div class="rain" style="left: 20%; animation-delay: -0.1s;"></div>
+          <div class="rain" style="left: 25%; animation-delay: -0.2s;"></div>
+          <div class="rain" style="left: 30%; animation-delay: -0.3s;"></div>
+          <div class="rain" style="left: 35%; animation-delay: -0.4s;"></div>
+          <div class="rain" style="left: 40%; animation-delay: -0.5s;"></div>
+          <div class="rain" style="left: 45%; animation-delay: -0.6s;"></div>
+          <div class="rain" style="left: 50%; animation-delay: -0.7s;"></div>
+          <div class="rain" style="left: 55%; animation-delay: -0.8s;"></div>
+          <div class="snow" style="left: 15%; animation-delay: -0.2s;"></div>
+          <div class="snow" style="left: 25%; animation-delay: -0.4s;"></div>
+          <div class="snow" style="left: 35%; animation-delay: -0.6s;"></div>
+          <div class="snow" style="left: 45%; animation-delay: -0.8s;"></div>
+          <div class="snow" style="left: 55%; animation-delay: -1.0s;"></div>
+          <div class="snow" style="left: 65%; animation-delay: -1.2s;"></div>
+        </div>
+        <div class="ground"></div>
+      </div>
+    </div>
+    <div class="activity-feed" id="activityFeed"></div>
+    <div class="referral-container">
+      <div class="referral-feature" onclick="showReferralModal()"><i class="fa-solid fa-share-nodes"></i><span>Referral Program - Earn Rewards!</span></div>
+      <a href="https://t.me/akpyavj" target="_blank" class="telegram-link" onclick="logActivity('Clicked Telegram link')"><i class="fa-brands fa-telegram"></i></a>
+    </div>
+  </div>
+
+  <div class="withdraw-form" id="withdrawForm">
+    <h3>Withdraw Funds</h3>
+    <select id="paymentMethod" onchange="updatePaymentFields()">
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="kpay">KPay</option>
+      <option value="wavepay">WavePay</option>
+    </select>
+    <div class="input-container">
+      <input type="text" id="paymentName" placeholder="Enter User Name">
+    </div>
+    <div class="input-container">
+      <input type="text" id="paymentNumber" placeholder="Enter Number">
+    </div>
+    <div class="input-container">
+      <input type="number" id="withdrawAmount" placeholder="Enter amount (Min: 100 MMK)" min="100">
+    </div>
+    <textarea id="withdrawComment" placeholder="Enter your comment"></textarea>
+    <button onclick="confirmWithdraw()">Confirm</button>
+  </div>
+
+  <div class="withdraw-details" id="withdrawDetails">
+    <h3>လုပ်ဆောင်မှုအောင်မြင်ပါသည်</h3>
+    <p><strong>ငွေထုပ်လိုက်သည်:</strong> <span id="detailAmount"></span></p>
+    <p><strong>လုပ်ဆောင်သော အချိန်:</strong> <span id="detailTime"></span></p>
+    <p><strong>လုပ်ဆောင်မှုအမှတ်:</strong> <span id="detailId"></span></p>
+    <p><strong>လုပ်ဆောင်မှုအမျိုးအစား:</strong> ငွေထုတ်ယူခြင်း</p>
+    <p><strong>ငွေလွှဲအမည်:</strong> <span id="detailPaymentName"></span></p>
+    <p><strong>ငွေလွှဲနံပါတ်:</strong> <span id="detailPaymentNumber"></span></p>
+    <p><strong>ငွေပမာဏ:</strong> <span id="detailAmountRepeat"></span></p>
+    <p><strong>မှတ်ချက်:</strong> <span id="detailComment"></span></p>
+    <div class="neon-warning-container">
+      <div class="neon-warning">Screenshot ရိုက်ပြီး အောက်ပါလိပ်စာများသို့ ပို့ပါ</div>
+      <div class="countdown-circle" id="countdownLed"><span id="countdownTimer">30</span></div>
+    </div>
+    <div class="telegram-links">
+      <a href="https://t.me/Xcode299" target="_blank" class="telegram-link" onclick="logActivity('Clicked @Xcode299 link')"><i class="fa-brands fa-telegram"></i></a>
+      <a href="https://t.me/Seller22025" target="_blank" class="telegram-link" onclick="logActivity('Clicked @Seller22025 link')"><i class="fa-brands fa-telegram"></i></a>
+    </div>
+  </div>
+
+  <div class="referral-modal" id="referralModal">
+    <h3>Your Referral Link</h3>
+    <input type="text" id="referralLink" readonly>
+    <button onclick="copyReferralLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+  </div>
+
+  <script>
+    let mmkBalance = localStorage.getItem('mmkBalance') ? parseFloat(localStorage.getItem('mmkBalance')) : 0;
+    let countdownActive = false;
+    let countdownInterval = null;
+    const withdrawForm = document.getElementById('withdrawForm');
+    const withdrawDetails = document.getElementById('withdrawDetails');
+    const activityFeed = document.getElementById('activityFeed');
+    const referralModal = document.getElementById('referralModal');
+    const overlay = document.getElementById('overlay');
+
+    document.getElementById('mmkBalance').textContent = `${mmkBalance.toFixed(2)} MMK`;
+    logActivity("Application started");
+
+    function updateMMKBalance(amount) {
+      mmkBalance += amount;
+      document.getElementById('mmkBalance').textContent = `${mmkBalance.toFixed(2)} MMK`;
+      localStorage.setItem('mmkBalance', mmkBalance);
+      logActivity(`Balance updated: ${amount > 0 ? '+' : ''}${amount} MMK`);
+    }
+
+    function logActivity(message) {
+      const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const activity = document.createElement('div');
+      activity.className = 'activity-item';
+      activity.innerHTML = `<i class="fa-solid fa-bolt" style="color:#00cc66;"></i>[${time}] ${message}`;
+      activityFeed.prepend(activity);
+      if (activityFeed.children.length > 5) activityFeed.lastChild.remove();
+    }
+
+    function showWithdrawForm() {
+      withdrawForm.style.display = 'block';
+      document.getElementById('withdrawAmount').disabled = true;
+      document.getElementById('paymentName').disabled = true;
+      document.getElementById('paymentNumber').disabled = true;
+      document.getElementById('withdrawComment').disabled = true;
+      document.getElementById('paymentMethod').focus();
+      document.removeEventListener('click', hidePopup);
+      document.addEventListener('click', hidePopup);
+    }
+
+    function hidePopup(event) {
+      if (countdownActive) return;
+      if (withdrawForm.style.display === 'block' && !withdrawForm.contains(event.target) && !event.target.closest('.withdraw-btn')) {
+        withdrawForm.style.display = 'none';
+      }
+      if (withdrawDetails.style.display === 'block' && !withdrawDetails.contains(event.target)) {
+        withdrawDetails.style.display = 'none';
+      }
+      if (referralModal.style.display === 'block' && !referralModal.contains(event.target) && !event.target.closest('.referral-feature')) {
+        referralModal.style.display = 'none';
+      }
+    }
+
+    function updatePaymentFields() {
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      const paymentName = document.getElementById('paymentName');
+      const paymentNumber = document.getElementById('paymentNumber');
+      const amountInput = document.getElementById('withdrawAmount');
+      const commentInput = document.getElementById('withdrawComment');
+
+      if (paymentMethod === 'kpay') {
+        paymentName.placeholder = 'Enter KPay User Name';
+        paymentNumber.placeholder = 'Enter KPay Number';
+      } else if (paymentMethod === 'wavepay') {
+        paymentName.placeholder = 'Enter WavePay User Name';
+        paymentNumber.placeholder = 'Enter WavePay Number';
+      } else {
+        paymentName.placeholder = 'Enter User Name';
+        paymentNumber.placeholder = 'Enter Number';
+      }
+
+      if (paymentMethod) {
+        amountInput.disabled = false;
+        paymentName.disabled = false;
+        paymentNumber.disabled = false;
+        commentInput.disabled = false;
+      }
+    }
+
+    function showError(inputId, message) {
+      const input = document.getElementById(inputId);
+      let error = input.nextElementSibling;
+      if (!error || !error.classList.contains('error')) {
+        error = document.createElement('span');
+        error.className = 'error';
+        input.parentElement.appendChild(error);
+      }
+      error.textContent = message;
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.withdraw-form .error').forEach(error => error.textContent = '');
+    }
+
+    function confirmWithdraw() {
+      clearErrors();
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      const paymentName = document.getElementById('paymentName').value.trim();
+      const paymentNumber = document.getElementById('paymentNumber').value.trim();
+      const comment = document.getElementById('withdrawComment').value.trim();
+      const minAmount = 100;
+      const button = document.querySelector('#withdrawForm button');
+
+      if (!paymentMethod) {
+        showError('paymentMethod', 'Please select a payment method first!');
+        return;
+      }
+      if (isNaN(amount) || amount < minAmount) {
+        showError('withdrawAmount', `Please enter an amount of at least ${minAmount} MMK!`);
+        return;
+      }
+      if (amount > mmkBalance) {
+        showError('withdrawAmount', 'Insufficient balance!');
+        return;
+      }
+      if (!paymentName) {
+        showError('paymentName', 'Please enter your User Name!');
+        return;
+      }
+      if (!paymentNumber || !/^09[0-9]{9}$/.test(paymentNumber)) {
+        showError('paymentNumber', 'Please enter a valid Myanmar phone number (e.g., 09XXXXXXXXX)');
+        return;
+      }
+      if (!comment) {
+        showError('withdrawComment', 'Please enter a comment!');
+        return;
+      }
+
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+      const time = new Date().toLocaleString('en-US', { hour12: true });
+      const transactionId = 'TXN' + Math.floor(Math.random() * 1000000);
+      const paymentMethodText = paymentMethod === 'kpay' ? 'KPay' : 'WavePay';
+
+      mmkBalance -= amount;
+      document.getElementById('mmkBalance').textContent = `${mmkBalance.toFixed(2)} MMK`;
+      localStorage.setItem('mmkBalance', mmkBalance);
+      logActivity(`Withdrew ${amount.toFixed(2)} MMK via ${paymentMethodText}`);
+
+      withdrawForm.style.display = 'none';
+      document.getElementById('detailAmount').textContent = `${amount.toFixed(2)} MMK`;
+      document.getElementById('detailTime').textContent = time;
+      document.getElementById('detailId').textContent = transactionId;
+      document.getElementById('detailPaymentName').textContent = `${paymentMethodText}: ${paymentName}`;
+      document.getElementById('detailPaymentNumber').textContent = paymentNumber;
+      document.getElementById('detailAmountRepeat').textContent = `${amount.toFixed(2)} MMK`;
+      document.getElementById('detailComment').textContent = comment;
+
+      withdrawDetails.style.display = 'block';
+      button.disabled = false;
+      button.innerHTML = 'Confirm';
+
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      overlay.style.display = 'block';
+      countdownActive = true;
+      document.getElementById('countdownLed').style.display = 'flex';
+      let timeLeft = 30;
+      const countdownTimer = document.getElementById('countdownTimer');
+      countdownTimer.textContent = timeLeft;
+
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        countdownTimer.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          countdownActive = false;
+          document.getElementById('countdownLed').style.display = 'none';
+          overlay.style.display = 'none';
+          document.addEventListener('click', hidePopup);
+        }
+      }, 1000);
+
+      document.removeEventListener('click', hidePopup);
+
+      document.getElementById('withdrawAmount').value = '';
+      document.getElementById('paymentMethod').value = '';
+      document.getElementById('paymentName').value = '';
+      document.getElementById('paymentNumber').value = '';
+      document.getElementById('withdrawComment').value = '';
+    }
+
+    function generateReferralLink() {
+      const referralCode = 'REF' + Math.random().toString(36).substr(2, 6).toUpperCase();
+      return `https://yourwebsite.com/referral/${referralCode}`;
+    }
+
+    function showReferralModal() {
+      const referralLink = document.getElementById('referralLink');
+      referralLink.value = generateReferralLink();
+      referralModal.style.display = 'block';
+      document.addEventListener('click', hidePopup);
+    }
+
+    async function copyReferralLink() {
+      const referralLink = document.getElementById('referralLink');
+      try {
+        await navigator.clipboard.writeText(referralLink.value);
+        logActivity('Referral link copied');
+        alert('Referral link copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy referral link. Please try again.');
+      }
+    }
+
+    if (!navigator.clipboard) {
+      navigator.clipboard = {
+        writeText: function(text) {
+          return new Promise((resolve) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            resolve();
+          });
+        }
+      };
+    }
+  </script>
+</body>
+</html>
